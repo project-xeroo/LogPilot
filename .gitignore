@@ -1,0 +1,33 @@
+# python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+# node
+node_modules/
+frontend/dist/
+# env / secrets
+.env
+.env.local
+*.pem
+# data & artefacts
+data/sample-logs/
+celerybeat-schedule*
+*.log
+# terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+# editors / os
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+# companion demo app - lives in its own separate repo, never part of LogPilot
+/test app/
+# stray local scratch file
+/.json

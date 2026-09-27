@@ -1,0 +1,3673 @@
+# Generated from the running application:  make openapi
+openapi: 3.1.0
+info:
+  title: LogPilot Agent API
+  description: 'Cloud-native, autonomous log-intelligence agent: ingestion, search, chat, RCA, reports, proactive
+    failure forecasting and autonomy policy.
+
+
+    Authenticate with POST /api/v1/auth/login, then send `Authorization: Bearer <token>`. Real-time events and streamed
+    chat use the WebSocket at /ws?token=<jwt> (not described by OpenAPI).'
+  version: 2.0.0
+paths:
+  /api/v1/auth/login:
+    post:
+      tags:
+      - auth
+      summary: Login
+      operationId: login_api_v1_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginBody'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/me:
+    get:
+      tags:
+      - auth
+      summary: Me
+      operationId: me_api_v1_auth_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/auth/me/guided-mode:
+    patch:
+      tags:
+      - auth
+      summary: Set Guided
+      description: Any account can toggle guided mode; it is on by default for the Junior Engineer role.
+      operationId: set_guided_api_v1_auth_me_guided_mode_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuidedBody'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/auth/change-password:
+    post:
+      tags:
+      - auth
+      summary: Change Password
+      operationId: change_password_api_v1_auth_change_password_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordBody'
+        required: true
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/users:
+    get:
+      tags:
+      - users
+      summary: List Users
+      operationId: list_users_api_v1_users_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+    post:
+      tags:
+      - users
+      summary: Create User
+      operationId: create_user_api_v1_users_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUser'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/users/{user_id}:
+    patch:
+      tags:
+      - users
+      summary: Update User
+      operationId: update_user_api_v1_users__user_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: User Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUser'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/users/{user_id}/promote:
+    post:
+      tags:
+      - users
+      summary: Promote
+      description: 'Promote a Junior Engineer out of guided mode: role -> Developer, guided mode off, approval rights
+        granted.'
+      operationId: promote_api_v1_users__user_id__promote_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: User Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects:
+    get:
+      tags:
+      - projects
+      summary: List Projects
+      operationId: list_projects_api_v1_projects_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+    post:
+      tags:
+      - projects
+      summary: Create Project
+      operationId: create_project_api_v1_projects_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectBody'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/projects/{project_id}/services:
+    get:
+      tags:
+      - projects
+      summary: List Services
+      operationId: list_services_api_v1_projects__project_id__services_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/services/{service_id}:
+    patch:
+      tags:
+      - projects
+      summary: Configure Service
+      operationId: configure_service_api_v1_projects__project_id__services__service_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: service_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Service Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceConfig'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/logs/upload:
+    post:
+      tags:
+      - logs
+      summary: Upload
+      description: 'Streams the multipart body straight to the ingestion service (never buffered here). The 500MB
+        limit is
+
+        enforced both on Content-Length and on bytes actually received.'
+      operationId: upload_api_v1_projects__project_id__logs_upload_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: environment
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Environment
+      - name: default_service
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Default Service
+      - name: custom_pattern
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Custom Pattern
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/logs/records:
+    post:
+      tags:
+      - logs
+      summary: Ingest Records
+      operationId: ingest_records_api_v1_projects__project_id__logs_records_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordsBody'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/logs/stream:
+    post:
+      tags:
+      - logs
+      summary: Stream
+      description: 'Real-time streaming ingestion: send a chunked NDJSON body (one JSON record per line).'
+      operationId: stream_api_v1_projects__project_id__logs_stream_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: environment
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Environment
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/logs/sessions:
+    get:
+      tags:
+      - logs
+      summary: Sessions
+      operationId: sessions_api_v1_projects__project_id__logs_sessions_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/logs/sessions/{session_id}:
+    get:
+      tags:
+      - logs
+      summary: Session
+      operationId: session_api_v1_projects__project_id__logs_sessions__session_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Session Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/logs/sessions/{session_id}/malformed:
+    get:
+      tags:
+      - logs
+      summary: Malformed
+      operationId: malformed_api_v1_projects__project_id__logs_sessions__session_id__malformed_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Session Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 100
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/search:
+    post:
+      tags:
+      - search
+      summary: Search
+      operationId: search_api_v1_projects__project_id__search_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/health-state:
+    get:
+      tags:
+      - health
+      summary: Get Health State
+      operationId: get_health_state_api_v1_projects__project_id__health_state_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: window_minutes
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 10080
+          minimum: 5
+          default: 60
+          title: Window Minutes
+      - name: service
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Service
+      - name: environment
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Environment
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/clusters:
+    get:
+      tags:
+      - health
+      summary: Clusters
+      operationId: clusters_api_v1_projects__project_id__clusters_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          default: active
+          title: Status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/dedup:
+    get:
+      tags:
+      - health
+      summary: Dedup
+      operationId: dedup_api_v1_projects__project_id__dedup_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/anomalies:
+    get:
+      tags:
+      - health
+      summary: Anomalies
+      operationId: anomalies_api_v1_projects__project_id__anomalies_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: hours
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 24
+          title: Hours
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 100
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/risk:
+    get:
+      tags:
+      - forecasting
+      summary: Risk Board
+      operationId: risk_board_api_v1_projects__project_id__risk_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/risk/{service_id}:
+    get:
+      tags:
+      - forecasting
+      summary: Risk Detail
+      operationId: risk_detail_api_v1_projects__project_id__risk__service_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: service_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Service Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/risk/{service_id}/history:
+    get:
+      tags:
+      - forecasting
+      summary: Risk History
+      operationId: risk_history_api_v1_projects__project_id__risk__service_id__history_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: service_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Service Id
+      - name: hours
+        in: query
+        required: false
+        schema:
+          type: number
+          default: 6
+          title: Hours
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/risk/{service_id}/run:
+    post:
+      tags:
+      - forecasting
+      summary: Run Now
+      description: Trigger an immediate forecasting cycle (SRE/Admin).
+      operationId: run_now_api_v1_projects__project_id__risk__service_id__run_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: service_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Service Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/alerts:
+    get:
+      tags:
+      - alerts
+      summary: List Alerts
+      operationId: list_alerts_api_v1_projects__project_id__alerts_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          default: open
+          title: Status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/alerts/{alert_id}:
+    get:
+      tags:
+      - alerts
+      summary: Alert Detail
+      operationId: alert_detail_api_v1_projects__project_id__alerts__alert_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: alert_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Alert Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/approvals:
+    get:
+      tags:
+      - alerts
+      summary: Approvals Queue
+      description: 'Everything awaiting a human decision: alerts routed to review by policy + propose-only actions.'
+      operationId: approvals_queue_api_v1_projects__project_id__approvals_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/actions/{action_id}/approve:
+    post:
+      tags:
+      - alerts
+      summary: Approve Action
+      operationId: approve_action_api_v1_projects__project_id__actions__action_id__approve_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: action_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Action Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/actions/{action_id}/edit:
+    post:
+      tags:
+      - alerts
+      summary: Edit Action
+      operationId: edit_action_api_v1_projects__project_id__actions__action_id__edit_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: action_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Action Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/app__routers__alerts__EditBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/actions/{action_id}/dismiss:
+    post:
+      tags:
+      - alerts
+      summary: Dismiss Action
+      description: 'Dismiss requires a reason: it is recorded and becomes learning signal.'
+      operationId: dismiss_action_api_v1_projects__project_id__actions__action_id__dismiss_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: action_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Action Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/alerts/{alert_id}/acknowledge:
+    post:
+      tags:
+      - alerts
+      summary: Acknowledge
+      operationId: acknowledge_api_v1_projects__project_id__alerts__alert_id__acknowledge_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: alert_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Alert Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/alerts/{alert_id}/dismiss:
+    post:
+      tags:
+      - alerts
+      summary: Dismiss Alert
+      operationId: dismiss_alert_api_v1_projects__project_id__alerts__alert_id__dismiss_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: alert_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Alert Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/alerts/{alert_id}/approve:
+    post:
+      tags:
+      - alerts
+      summary: Approve Alert
+      description: 'An alert that policy routed to human review (pending_review) is released: it becomes a live
+        alert and is notified externally.'
+      operationId: approve_alert_api_v1_projects__project_id__alerts__alert_id__approve_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: alert_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Alert Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/alerts/{alert_id}/outcome:
+    post:
+      tags:
+      - alerts
+      summary: Log Outcome
+      description: 'After every incident - prevented or not - engineers log whether the alert was accurate, what
+        was done and how long
+
+        resolution took. The forecasting subsystem learns from this (weights + leading-indicator signatures).'
+      operationId: log_outcome_api_v1_projects__project_id__alerts__alert_id__outcome_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: alert_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Alert Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OutcomeBody'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/alerts/{alert_id}/pre-mortem:
+    post:
+      tags:
+      - alerts
+      summary: Pre Mortem
+      operationId: pre_mortem_api_v1_projects__project_id__alerts__alert_id__pre_mortem_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: alert_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Alert Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/chat:
+    post:
+      tags:
+      - chat
+      summary: Chat
+      operationId: chat_api_v1_projects__project_id__chat_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/chat/threads:
+    get:
+      tags:
+      - chat
+      summary: Threads
+      operationId: threads_api_v1_projects__project_id__chat_threads_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 30
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/chat/threads/{thread_id}:
+    get:
+      tags:
+      - chat
+      summary: Thread
+      operationId: thread_api_v1_projects__project_id__chat_threads__thread_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: thread_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Thread Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/chat/messages/{message_id}/rating:
+    post:
+      tags:
+      - chat
+      summary: Rate
+      description: Thumbs rating on an agent answer (feeds the >80% helpful metric).
+      operationId: rate_api_v1_projects__project_id__chat_messages__message_id__rating_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: message_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Message Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/chat/suggestions:
+    get:
+      tags:
+      - chat
+      summary: Suggestions
+      description: 4-6 example questions relevant to what the agent is currently seeing (never a blank input box).
+      operationId: suggestions_api_v1_projects__project_id__chat_suggestions_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: n
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 6
+          title: N
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/chat/explain:
+    post:
+      tags:
+      - chat
+      summary: Explain
+      description: '''What does this error mean?'' in plain language - powers the click-to-explain affordance on
+        log lines.'
+      operationId: explain_api_v1_projects__project_id__chat_explain_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExplainBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/rca:
+    post:
+      tags:
+      - rca
+      summary: Run
+      operationId: run_api_v1_projects__project_id__rca_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RcaBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - rca
+      summary: List Rca
+      operationId: list_rca_api_v1_projects__project_id__rca_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/rca/{rca_id}:
+    get:
+      tags:
+      - rca
+      summary: Get Rca
+      operationId: get_rca_api_v1_projects__project_id__rca__rca_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: rca_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Rca Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/rca/{rca_id}/review:
+    post:
+      tags:
+      - rca
+      summary: Review
+      description: RCA output is human-reviewed (PRD tool 10).
+      operationId: review_api_v1_projects__project_id__rca__rca_id__review_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: rca_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Rca Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/reports:
+    get:
+      tags:
+      - reports
+      summary: List Reports
+      operationId: list_reports_api_v1_projects__project_id__reports_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: kind
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Kind
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/reports/{report_id}:
+    get:
+      tags:
+      - reports
+      summary: Get Report
+      operationId: get_report_api_v1_projects__project_id__reports__report_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: report_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Report Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - reports
+      summary: Edit Report
+      description: Reports are editable in-app before export.
+      operationId: edit_report_api_v1_projects__project_id__reports__report_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: report_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Report Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/app__routers__reports__EditBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - reports
+      summary: Discard
+      operationId: discard_api_v1_projects__project_id__reports__report_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: report_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Report Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/reports/{report_id}/approve:
+    post:
+      tags:
+      - reports
+      summary: Approve
+      description: Human sign-off on an agent-drafted report.
+      operationId: approve_api_v1_projects__project_id__reports__report_id__approve_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: report_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Report Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/reports/{report_id}/export:
+    get:
+      tags:
+      - reports
+      summary: Export
+      operationId: export_api_v1_projects__project_id__reports__report_id__export_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: report_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Report Id
+      - name: format
+        in: query
+        required: false
+        schema:
+          enum:
+          - pdf
+          - markdown
+          type: string
+          default: pdf
+          title: Format
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/reports/incident:
+    post:
+      tags:
+      - reports
+      summary: Generate Incident
+      operationId: generate_incident_api_v1_projects__project_id__reports_incident_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentBody'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/reports/executive-summary:
+    post:
+      tags:
+      - reports
+      summary: Generate Exec
+      operationId: generate_exec_api_v1_projects__project_id__reports_executive_summary_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecBody'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/deployments:
+    get:
+      tags:
+      - deployments
+      summary: Versions
+      operationId: versions_api_v1_projects__project_id__deployments_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: service
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Service
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - deployments
+      summary: Register
+      description: Register a deployment event via the API; the agent then compares it with the previous version
+        autonomously.
+      operationId: register_api_v1_projects__project_id__deployments_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeployBody'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/deployments/compare:
+    get:
+      tags:
+      - deployments
+      summary: Compare
+      operationId: compare_api_v1_projects__project_id__deployments_compare_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: service
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Service
+      - name: from_version
+        in: query
+        required: true
+        schema:
+          type: string
+          title: From Version
+      - name: to_version
+        in: query
+        required: true
+        schema:
+          type: string
+          title: To Version
+      - name: environment
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Environment
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/deployments/comparisons:
+    get:
+      tags:
+      - deployments
+      summary: Comparisons
+      operationId: comparisons_api_v1_projects__project_id__deployments_comparisons_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/deployments/comparisons/{comparison_id}:
+    get:
+      tags:
+      - deployments
+      summary: Comparison
+      operationId: comparison_api_v1_projects__project_id__deployments_comparisons__comparison_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: comparison_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Comparison Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/policy/tools:
+    get:
+      tags:
+      - policy
+      summary: List Policy
+      operationId: list_policy_api_v1_policy_tools_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/policy/tools/{tool_name}:
+    put:
+      tags:
+      - policy
+      summary: Set Policy
+      operationId: set_policy_api_v1_policy_tools__tool_name__put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tool_name
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tool Name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - policy
+      summary: Delete Override
+      description: Remove an environment-specific override (the '*' row is the base policy and stays).
+      operationId: delete_override_api_v1_policy_tools__tool_name__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tool_name
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tool Name
+      - name: scope
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Scope
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/settings/forecasting:
+    get:
+      tags:
+      - policy
+      summary: Get Forecast Settings
+      operationId: get_forecast_settings_api_v1_settings_forecasting_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+    put:
+      tags:
+      - policy
+      summary: Put Forecast Settings
+      operationId: put_forecast_settings_api_v1_settings_forecasting_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForecastSettings'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/settings/provider:
+    get:
+      tags:
+      - policy
+      summary: Provider Settings
+      description: 'Model/provider settings (read-only here: provider credentials live in the deployment''s secret
+        store).'
+      operationId: provider_settings_api_v1_settings_provider_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/webhooks:
+    get:
+      tags:
+      - policy
+      summary: List Webhooks
+      operationId: list_webhooks_api_v1_webhooks_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+    post:
+      tags:
+      - policy
+      summary: Create Webhook
+      operationId: create_webhook_api_v1_webhooks_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookBody'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/webhooks/{webhook_id}:
+    delete:
+      tags:
+      - policy
+      summary: Delete Webhook
+      operationId: delete_webhook_api_v1_webhooks__webhook_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: webhook_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Webhook Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/webhooks/{webhook_id}/test:
+    post:
+      tags:
+      - policy
+      summary: Test Webhook
+      operationId: test_webhook_api_v1_webhooks__webhook_id__test_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: webhook_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Webhook Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/webhooks/deliveries:
+    get:
+      tags:
+      - policy
+      summary: Deliveries
+      operationId: deliveries_api_v1_webhooks_deliveries_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/feed:
+    get:
+      tags:
+      - feed
+      summary: Feed
+      operationId: feed_api_v1_projects__project_id__feed_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 40
+          title: Limit
+      - name: before
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Before
+      - name: kinds
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Kinds
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/glossary:
+    get:
+      tags:
+      - glossary
+      summary: Search
+      operationId: search_api_v1_glossary_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Q
+      - name: category
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Category
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - glossary
+      summary: Add
+      operationId: add_api_v1_glossary_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TermBody'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/audit/events:
+    get:
+      tags:
+      - audit
+      summary: Events
+      operationId: events_api_v1_audit_events_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: action
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Action
+      - name: actor_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Actor Id
+      - name: project_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+      - name: start
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Start
+      - name: end
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 100
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/audit/agent-actions:
+    get:
+      tags:
+      - audit
+      summary: Agent Actions
+      operationId: agent_actions_api_v1_audit_agent_actions_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tool
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tool
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: project_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+      - name: start
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Start
+      - name: end
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End
+      - name: high_impact
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: High Impact
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 100
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/audit/export:
+    get:
+      tags:
+      - audit
+      summary: Export
+      description: Streams the audit export through (nothing is buffered).
+      operationId: export_api_v1_audit_export_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: kind
+        in: query
+        required: false
+        schema:
+          type: string
+          default: events
+          title: Kind
+      - name: format
+        in: query
+        required: false
+        schema:
+          type: string
+          default: csv
+          title: Format
+      - name: start
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Start
+      - name: end
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End
+      - name: project_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/audit/verify:
+    get:
+      tags:
+      - audit
+      summary: Verify
+      operationId: verify_api_v1_audit_verify_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/audit/agent-actions/{action_id}/revert:
+    post:
+      tags:
+      - audit
+      summary: Revert
+      operationId: revert_api_v1_audit_agent_actions__action_id__revert_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: action_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Action Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevertBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}/metrics:
+    get:
+      tags:
+      - metrics
+      summary: Metrics
+      operationId: metrics_api_v1_projects__project_id__metrics_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: days
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 30
+          title: Days
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/health:
+    get:
+      tags:
+      - system
+      summary: Health
+      description: Liveness/readiness for load balancers.
+      operationId: health_api_v1_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/system/health:
+    get:
+      tags:
+      - system
+      summary: System Health
+      description: Aggregate view of every component (Admin/SRE).
+      operationId: system_health_api_v1_system_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /health:
+    get:
+      tags:
+      - system
+      summary: Health
+      description: Liveness/readiness for load balancers.
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /system/health:
+    get:
+      tags:
+      - system
+      summary: System Health
+      description: Aggregate view of every component (Admin/SRE).
+      operationId: system_health_system_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+components:
+  schemas:
+    ApiRecord:
+      properties:
+        timestamp:
+          anyOf:
+          - type: string
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Timestamp
+        message:
+          type: string
+          title: Message
+        severity:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Severity
+        level:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Level
+        service:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Service
+        request_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Request Id
+        trace_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Trace Id
+        environment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Environment
+        deployment_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Deployment Version
+        attributes:
+          additionalProperties: true
+          type: object
+          title: Attributes
+      type: object
+      required:
+      - message
+      title: ApiRecord
+    ChatBody:
+      properties:
+        message:
+          type: string
+          maxLength: 4000
+          minLength: 1
+          title: Message
+        thread_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Thread Id
+      type: object
+      required:
+      - message
+      title: ChatBody
+    CreateUser:
+      properties:
+        email:
+          type: string
+          title: Email
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+        role:
+          $ref: '#/components/schemas/Role'
+        password:
+          type: string
+          maxLength: 128
+          minLength: 10
+          title: Password
+        project_ids:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: Project Ids
+          default: []
+      type: object
+      required:
+      - email
+      - name
+      - role
+      - password
+      title: CreateUser
+    DeployBody:
+      properties:
+        service:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Service
+        version:
+          type: string
+          maxLength: 100
+          minLength: 1
+          title: Version
+        environment:
+          type: string
+          title: Environment
+          default: production
+        deployed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deployed At
+      type: object
+      required:
+      - service
+      - version
+      title: DeployBody
+    ExecBody:
+      properties:
+        days:
+          type: integer
+          maximum: 90.0
+          minimum: 1.0
+          title: Days
+          default: 7
+      type: object
+      title: ExecBody
+    ExplainBody:
+      properties:
+        message:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Message
+        service:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Service
+        severity:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Severity
+      type: object
+      required:
+      - message
+      title: ExplainBody
+    ForecastSettings:
+      properties:
+        warning_threshold:
+          type: integer
+          maximum: 99.0
+          minimum: 1.0
+          title: Warning Threshold
+        critical_threshold:
+          type: integer
+          maximum: 100.0
+          minimum: 2.0
+          title: Critical Threshold
+        interval_seconds:
+          type: integer
+          maximum: 3600.0
+          minimum: 10.0
+          title: Interval Seconds
+        window_seconds:
+          type: integer
+          maximum: 600.0
+          minimum: 10.0
+          title: Window Seconds
+          default: 60
+      type: object
+      required:
+      - warning_threshold
+      - critical_threshold
+      - interval_seconds
+      title: ForecastSettings
+    GuidedBody:
+      properties:
+        enabled:
+          type: boolean
+          title: Enabled
+      type: object
+      required:
+      - enabled
+      title: GuidedBody
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    IncidentBody:
+      properties:
+        service:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Service
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        rca_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Rca Id
+        alert_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Alert Id
+        start:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Start
+        end:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End
+      type: object
+      title: IncidentBody
+    LoginBody:
+      properties:
+        email:
+          type: string
+          title: Email
+        password:
+          type: string
+          title: Password
+      type: object
+      required:
+      - email
+      - password
+      title: LoginBody
+    OutcomeBody:
+      properties:
+        outcome:
+          type: string
+          enum:
+          - prevented
+          - occurred
+          - false_positive
+          title: Outcome
+        action_taken:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Action Taken
+        time_to_resolve_minutes:
+          anyOf:
+          - type: number
+            maximum: 100000.0
+            minimum: 0.0
+          - type: 'null'
+          title: Time To Resolve Minutes
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 4000
+          - type: 'null'
+          title: Notes
+      type: object
+      required:
+      - outcome
+      title: OutcomeBody
+    PasswordBody:
+      properties:
+        current_password:
+          type: string
+          title: Current Password
+        new_password:
+          type: string
+          maxLength: 128
+          minLength: 10
+          title: New Password
+      type: object
+      required:
+      - current_password
+      - new_password
+      title: PasswordBody
+    PolicyBody:
+      properties:
+        scope:
+          type: string
+          title: Scope
+          default: '*'
+        tier:
+          type: string
+          enum:
+          - read_only
+          - autonomous_background
+          - autonomous_policy_bounded
+          - propose_only
+          - autonomous_execution
+          title: Tier
+        min_confidence:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Min Confidence
+          default: 0.0
+        requires_approval:
+          type: boolean
+          title: Requires Approval
+          default: false
+        enabled:
+          type: boolean
+          title: Enabled
+          default: true
+      type: object
+      required:
+      - tier
+      title: PolicyBody
+    ProjectBody:
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+        environment:
+          type: string
+          title: Environment
+          default: production
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+      type: object
+      required:
+      - name
+      title: ProjectBody
+    RatingBody:
+      properties:
+        rating:
+          type: integer
+          enum:
+          - 1
+          - -1
+          title: Rating
+      type: object
+      required:
+      - rating
+      title: RatingBody
+    RcaBody:
+      properties:
+        service:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Service
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        start:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Start
+        end:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End
+      type: object
+      title: RcaBody
+    ReasonBody:
+      properties:
+        reason:
+          type: string
+          maxLength: 2000
+          minLength: 3
+          title: Reason
+      type: object
+      required:
+      - reason
+      title: ReasonBody
+    RecordsBody:
+      properties:
+        environment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Environment
+        records:
+          items:
+            $ref: '#/components/schemas/ApiRecord'
+          type: array
+          maxItems: 10000
+          minItems: 1
+          title: Records
+      type: object
+      required:
+      - records
+      title: RecordsBody
+    RevertBody:
+      properties:
+        note:
+          type: string
+          title: Note
+          default: ''
+      type: object
+      title: RevertBody
+    ReviewBody:
+      properties:
+        status:
+          type: string
+          title: Status
+      type: object
+      required:
+      - status
+      title: ReviewBody
+    Role:
+      type: string
+      enum:
+      - admin
+      - developer
+      - junior_engineer
+      - sre
+      - viewer
+      title: Role
+    SearchBody:
+      properties:
+        query:
+          type: string
+          title: Query
+          default: ''
+        mode:
+          type: string
+          pattern: ^(keyword|semantic)$
+          title: Mode
+          default: keyword
+        regex:
+          type: boolean
+          title: Regex
+          default: false
+        exact:
+          type: boolean
+          title: Exact
+          default: false
+        start:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Start
+        end:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End
+        severity:
+          items:
+            type: string
+          type: array
+          title: Severity
+          default: []
+        min_severity:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Min Severity
+        services:
+          items:
+            type: string
+          type: array
+          title: Services
+          default: []
+        environment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Environment
+        deployment_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Deployment Version
+        trace_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Trace Id
+        request_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Request Id
+        limit:
+          type: integer
+          maximum: 500.0
+          minimum: 1.0
+          title: Limit
+          default: 50
+        offset:
+          type: integer
+          minimum: 0.0
+          title: Offset
+          default: 0
+        context_window:
+          type: integer
+          maximum: 10.0
+          minimum: 0.0
+          title: Context Window
+          default: 2
+      type: object
+      title: SearchBody
+    Section:
+      properties:
+        key:
+          type: string
+          title: Key
+        title:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Title
+        body:
+          type: string
+          maxLength: 50000
+          title: Body
+      type: object
+      required:
+      - key
+      - title
+      - body
+      title: Section
+    ServiceConfig:
+      properties:
+        enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Enabled
+        forecast_interval_seconds:
+          anyOf:
+          - type: integer
+            maximum: 3600.0
+            minimum: 10.0
+          - type: 'null'
+          title: Forecast Interval Seconds
+        warning_threshold:
+          anyOf:
+          - type: integer
+            maximum: 99.0
+            minimum: 1.0
+          - type: 'null'
+          title: Warning Threshold
+        critical_threshold:
+          anyOf:
+          - type: integer
+            maximum: 100.0
+            minimum: 2.0
+          - type: 'null'
+          title: Critical Threshold
+        playbook:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Playbook
+        clear_thresholds:
+          type: boolean
+          title: Clear Thresholds
+          default: false
+      type: object
+      title: ServiceConfig
+    TermBody:
+      properties:
+        term:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Term
+        definition:
+          type: string
+          maxLength: 1000
+          minLength: 3
+          title: Definition
+        category:
+          type: string
+          title: Category
+          default: reliability
+      type: object
+      required:
+      - term
+      - definition
+      title: TermBody
+    UpdateUser:
+      properties:
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        role:
+          anyOf:
+          - $ref: '#/components/schemas/Role'
+          - type: 'null'
+        is_active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Active
+        guided_mode:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Guided Mode
+        project_ids:
+          anyOf:
+          - items:
+              type: string
+              format: uuid
+            type: array
+          - type: 'null'
+          title: Project Ids
+      type: object
+      title: UpdateUser
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    WebhookBody:
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+        url:
+          type: string
+          title: Url
+        secret:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Secret
+        events:
+          items:
+            type: string
+          type: array
+          title: Events
+        min_level:
+          type: string
+          enum:
+          - warning
+          - critical
+          title: Min Level
+          default: warning
+        enabled:
+          type: boolean
+          title: Enabled
+          default: true
+      type: object
+      required:
+      - name
+      - url
+      title: WebhookBody
+    app__routers__alerts__EditBody:
+      properties:
+        text:
+          type: string
+          maxLength: 2000
+          minLength: 3
+          title: Text
+        approve:
+          type: boolean
+          title: Approve
+          default: true
+      type: object
+      required:
+      - text
+      title: EditBody
+    app__routers__reports__EditBody:
+      properties:
+        title:
+          anyOf:
+          - type: string
+            maxLength: 500
+            minLength: 1
+          - type: 'null'
+          title: Title
+        sections:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/Section'
+            type: array
+          - type: 'null'
+          title: Sections
+      type: object
+      title: EditBody
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
+servers:
+- url: http://localhost:8000
+  description: Local (docker compose)

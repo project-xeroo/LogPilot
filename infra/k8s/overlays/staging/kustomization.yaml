@@ -1,0 +1,12 @@
+# Staging: production topology at reduced scale (Starter tier); real provider, cheaper model tiers.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources: [../../base]
+patches:
+  - target: { kind: ConfigMap, name: logpilot-config }
+    patch: |-
+      - { op: replace, path: /data/ENVIRONMENT, value: staging }
+      - { op: replace, path: /data/SEED_DEMO, value: "false" }
+  - target: { kind: HorizontalPodAutoscaler }
+    patch: |-
+      - { op: replace, path: /spec/maxReplicas, value: 4 }

@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "logpilot-shared"
+version = "2.0.0"
+description = "Shared models, config and utilities for the LogPilot Agent services"
+requires-python = ">=3.11"
+dependencies = [
+  "sqlalchemy>=2.0,<2.2",
+  "psycopg2-binary>=2.9",
+  "pydantic>=2.6",
+  "pydantic-settings>=2.2",
+  "redis>=5.0",
+  "celery>=5.3",
+  "pyjwt>=2.8",
+  "bcrypt>=4.1",
+  "boto3>=1.34",
+  "qdrant-client>=1.12,<1.13",
+  "httpx>=0.27",
+  "numpy>=1.26",
+  "python-dateutil>=2.9",
+]
+
+# The shared/ directory *is* the `shared` package (flat layout), so map the
+# package name onto the project root.
+[tool.setuptools]
+packages = ["shared", "shared.config", "shared.models", "shared.utils"]
+
+[tool.setuptools.package-dir]
+shared = "."

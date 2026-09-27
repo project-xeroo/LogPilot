@@ -1,0 +1,11 @@
+# Hostname-based egress allowlist for the AI provider (needs Cilium). Use instead of the CIDR policy in base.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata: { name: ai-provider-fqdn-egress, namespace: logpilot }
+spec:
+  endpointSelector: { matchLabels: { logpilot/egress-ai: allowed } }
+  egress:
+    - toEndpoints: [{ matchLabels: { "k8s:io.kubernetes.pod.namespace": kube-system, "k8s:k8s-app": kube-dns } }]
+      toPorts: [{ ports: [{ port: "53", protocol: ANY }], rules: { dns: [{ matchPattern: "*" }] } }]
+    - toFQDNs: [{ matchName: REPLACE-ai-provider-host }]
+      toPorts: [{ ports: [{ port: "443", protocol: TCP }] }]

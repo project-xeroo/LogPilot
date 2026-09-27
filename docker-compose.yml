@@ -1,0 +1,147 @@
+# LogPilot AI Agent - full stack (PRD Section 12: containers for every component).
+#
+# Infrastructure (Postgres+TimescaleDB, Redis, Qdrant vector store, SeaweedFS S3-compatible storage) is defined in
+# "test code/docker-compose.yml" - your original test compose file, extended - and pulled in here so there is a
+# single source of truth for it. Everything below is the application layer.
+#
+#   docker compose up --build            (dev: also loads docker-compose.override.yml)
+#   docker compose -f docker-compose.yml up -d --build      (no dev overrides)
+#
+# Console:  http://localhost:8080      API + docs:  http://localhost:8000/docs
+
+name: logpilot
+
+include:
+  - path: ./test code/docker-compose.yml
+
+x-app-env: &app-env
+  ENVIRONMENT: ${ENVIRONMENT:-dev}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  SEED_DEMO: ${SEED_DEMO:-true}
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://localhost:5173}
+  # managed PostgreSQL + time-series extension
+  DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/logpilot
+  # managed Redis: broker + result backend + event bus
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/1
+  CELERY_RESULT_BACKEND: redis://redis:6379/2
+  # S3-compatible object storage
+  S3_ENDPOINT_URL: http://object-store:8333
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY:-logpilot}
+  S3_SECRET_KEY: ${S3_SECRET_KEY:-logpilot-secret}
+  S3_BUCKET: ${S3_BUCKET:-logpilot-logs}
+  # managed vector store
+  QDRANT_URL: http://qdrant:6333
+  EMBEDDING_DIM: ${EMBEDDING_DIM:-256}
+  # auth
+  JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+  JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-60}
+  INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-internal-change-me}
+  # cloud AI provider (OpenAI-compatible). AI_PROVIDER=mock runs fully offline.
+  AI_PROVIDER: ${AI_PROVIDER:-mock}
+  AI_EMBEDDING_PROVIDER: ${AI_EMBEDDING_PROVIDER:-}
+  AI_BASE_URL: ${AI_BASE_URL:-}
+  AI_API_KEY: ${AI_API_KEY:-}
+  AI_FAST_MODEL: ${AI_FAST_MODEL:-fast}
+  AI_DEEP_MODEL: ${AI_DEEP_MODEL:-deep}
+  AI_EMBEDDING_MODEL: ${AI_EMBEDDING_MODEL:-embed}
+  AI_EGRESS_ALLOWLIST: ${AI_EGRESS_ALLOWLIST:-}
+  # service discovery
+  AI_SERVICE_URL: http://ai-service:8002
+  INGESTION_SERVICE_URL: http://log-ingestion-service:8001
+  FORECASTING_SERVICE_URL: http://forecasting-service:8003
+  NOTIFICATION_SERVICE_URL: http://notification-service:8004
+  AUDIT_SERVICE_URL: http://audit-service:8005
+  WEBHOOK_ALLOW_PRIVATE: ${WEBHOOK_ALLOW_PRIVATE:-false}
+  FORECAST_CLOCK: ${FORECAST_CLOCK:-wall}
+
+x-app-deps: &app-deps
+  db: { condition: service_healthy }
+  redis: { condition: service_healthy }
+  qdrant: { condition: service_healthy }
+  object-store-init: { condition: service_completed_successfully }
+
+x-app: &app
+  restart: unless-stopped
+  environment: *app-env
+  depends_on: *app-deps
+
+services:
+  # ---- agent API server (REST + WebSocket, tool router) -------------------------------------------
+  api-gateway:
+    <<: *app
+    build: { context: ., dockerfile: services/api-gateway/Dockerfile }
+    image: logpilot/api-gateway:2.0.0
+    container_name: logpilot_api
+    ports: ["${GATEWAY_PORT:-8000}:8000"]
+
+  # ---- ingestion: upload/API/stream API + its Celery worker (parse -> redact -> store) ---------------
+  log-ingestion-service:
+    <<: *app
+    build: { context: ., dockerfile: services/log-ingestion-service/Dockerfile }
+    image: logpilot/log-ingestion-service:2.0.0
+    container_name: logpilot_ingestion
+  ingestion-worker:
+    <<: *app
+    image: logpilot/log-ingestion-service:2.0.0
+    container_name: logpilot_ingestion_worker
+    command: ["celery", "-A", "app.worker:celery_app", "worker", "-Q", "ingestion", "--loglevel", "INFO", "--concurrency", "2"]
+    healthcheck: { disable: true }
+    depends_on: { <<: *app-deps, log-ingestion-service: { condition: service_started } }
+
+  # ---- processing pipeline: embeddings, dedup, clustering, anomalies, deployment comparison ---------
+  processing-worker:
+    <<: *app
+    build: { context: ., dockerfile: services/processing-worker/Dockerfile }
+    image: logpilot/processing-worker:2.0.0
+    container_name: logpilot_processing
+    depends_on: { <<: *app-deps, ai-service: { condition: service_healthy } }
+
+  # ---- AI service: embeddings, search, chat, RCA, reports (all egress passes the PII gate) -----------
+  ai-service:
+    <<: *app
+    build: { context: ., dockerfile: services/ai-service/Dockerfile }
+    image: logpilot/ai-service:2.0.0
+    container_name: logpilot_ai
+
+  # ---- forecasting subsystem: API + workers + scheduler (was Celery beat, local) --------------------
+  forecasting-service:
+    <<: *app
+    build: { context: ., dockerfile: services/forecasting-service/Dockerfile }
+    image: logpilot/forecasting-service:2.0.0
+    container_name: logpilot_forecasting
+  forecasting-worker:
+    <<: *app
+    image: logpilot/forecasting-service:2.0.0
+    container_name: logpilot_forecasting_worker
+    command: ["celery", "-A", "app.loop.scheduler:celery_app", "worker", "-Q", "forecasting", "--loglevel", "INFO", "--concurrency", "4"]
+    healthcheck: { disable: true }
+    depends_on: { <<: *app-deps, forecasting-service: { condition: service_started } }
+  forecasting-scheduler:
+    <<: *app
+    image: logpilot/forecasting-service:2.0.0
+    container_name: logpilot_scheduler
+    command: ["celery", "-A", "app.loop.scheduler:celery_app", "beat", "--loglevel", "INFO", "--schedule", "/tmp/celerybeat-schedule"]
+    healthcheck: { disable: true }
+    depends_on: { <<: *app-deps, forecasting-service: { condition: service_started } }
+
+  notification-service:
+    <<: *app
+    build: { context: ., dockerfile: services/notification-service/Dockerfile }
+    image: logpilot/notification-service:2.0.0
+    container_name: logpilot_notification
+
+  audit-service:
+    <<: *app
+    build: { context: ., dockerfile: services/audit-service/Dockerfile }
+    image: logpilot/audit-service:2.0.0
+    container_name: logpilot_audit
+
+  # ---- supervisory console: static build served by nginx (CDN-ready) --------------------------------
+  console:
+    build: { context: ., dockerfile: infra/docker/console.Dockerfile }
+    image: logpilot/console:2.0.0
+    container_name: logpilot_console
+    restart: unless-stopped
+    depends_on: [api-gateway]
+    ports: ["${CONSOLE_PORT:-8080}:80"]

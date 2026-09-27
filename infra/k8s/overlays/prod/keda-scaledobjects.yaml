@@ -1,0 +1,35 @@
+# Scale workers on queue depth (Celery queues are Redis lists) so autoscaling tracks log volume, not CPU alone.
+# Requires KEDA. Delete the CPU HPAs of these three worker Deployments when enabling.
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata: { name: processing-worker, namespace: logpilot }
+spec:
+  scaleTargetRef: { name: processing-worker }
+  minReplicaCount: 2
+  maxReplicaCount: 60
+  cooldownPeriod: 300
+  triggers:
+    - type: redis
+      metadata: { addressFromEnv: KEDA_REDIS_ADDRESS, listName: processing, listLength: "20", enableTLS: "true" }
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata: { name: ingestion-worker, namespace: logpilot }
+spec:
+  scaleTargetRef: { name: ingestion-worker }
+  minReplicaCount: 2
+  maxReplicaCount: 40
+  triggers:
+    - type: redis
+      metadata: { addressFromEnv: KEDA_REDIS_ADDRESS, listName: ingestion, listLength: "5", enableTLS: "true" }
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata: { name: forecasting-worker, namespace: logpilot }
+spec:
+  scaleTargetRef: { name: forecasting-worker }
+  minReplicaCount: 2
+  maxReplicaCount: 40
+  triggers:
+    - type: redis
+      metadata: { addressFromEnv: KEDA_REDIS_ADDRESS, listName: forecasting, listLength: "10", enableTLS: "true" }

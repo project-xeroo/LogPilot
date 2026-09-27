@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "logpilot-processing-worker"
+version = "2.0.0"
+description = "Processing pipeline: embeddings, dedup, clustering, anomaly detection"
+requires-python = ">=3.11"
+# shared library (models, config, utils) is installed separately from ../../shared
+dependencies = [
+  "celery>=5.3",
+  "numpy>=1.26",
+  "httpx>=0.27",]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[tool.setuptools]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

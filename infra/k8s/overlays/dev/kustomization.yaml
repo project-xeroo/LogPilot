@@ -1,0 +1,30 @@
+# Dev: one replica of everything, offline mock AI provider, demo data on.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources: [../../base]
+patches:
+  - target: { kind: ConfigMap, name: logpilot-config }
+    patch: |-
+      - { op: replace, path: /data/ENVIRONMENT, value: dev }
+      - { op: replace, path: /data/SEED_DEMO, value: "true" }
+      - { op: replace, path: /data/AI_PROVIDER, value: mock }
+      - { op: replace, path: /data/EMBEDDING_DIM, value: "256" }
+      - { op: replace, path: /data/AI_EGRESS_ALLOWLIST, value: "" }
+  - target: { kind: HorizontalPodAutoscaler }
+    patch: |-
+      - { op: replace, path: /spec/minReplicas, value: 1 }
+      - { op: replace, path: /spec/maxReplicas, value: 2 }
+  - target: { kind: PodDisruptionBudget }
+    patch: |-
+      - { op: replace, path: /spec/minAvailable, value: 0 }
+replicas:
+  - { name: api-gateway, count: 1 }
+  - { name: log-ingestion-service, count: 1 }
+  - { name: ingestion-worker, count: 1 }
+  - { name: processing-worker, count: 1 }
+  - { name: ai-service, count: 1 }
+  - { name: forecasting-service, count: 1 }
+  - { name: forecasting-worker, count: 1 }
+  - { name: notification-service, count: 1 }
+  - { name: audit-service, count: 1 }
+  - { name: console, count: 1 }

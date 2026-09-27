@@ -1,0 +1,15 @@
+# Production: Growth/Enterprise tier. Multi-AZ, higher autoscaling ceilings, queue-driven worker scaling (KEDA),
+# and a hostname-based egress allowlist (Cilium).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - keda-scaledobjects.yaml
+  - cilium-egress.yaml
+patches:
+  - target: { kind: ConfigMap, name: logpilot-config }
+    patch: |-
+      - { op: replace, path: /data/ENVIRONMENT, value: prod }
+  - target: { kind: PodDisruptionBudget }
+    patch: |-
+      - { op: replace, path: /spec/minAvailable, value: 2 }

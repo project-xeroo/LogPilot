@@ -1,0 +1,39 @@
+# Network isolation (PRD 10.3): default-deny, then allow only what each component needs.
+# Outbound calls are limited to approved AI provider endpoints; no other egress.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: default-deny-all, namespace: logpilot }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: allow-intra-namespace-and-dns, namespace: logpilot }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from: [{ podSelector: {} }]
+    - from: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: ingress-nginx } } }]
+  egress:
+    - to: [{ podSelector: {} }]
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } }
+      ports: [{ port: 53, protocol: UDP }, { port: 53, protocol: TCP }]
+    # managed data plane inside the VPC: Postgres, Redis, vector store, S3 endpoints (private CIDRs only)
+    - to: [{ ipBlock: { cidr: 10.0.0.0/8 } }]
+      ports: [{ port: 5432 }, { port: 6379 }, { port: 6333 }, { port: 443 }]
+---
+# Only pods labelled logpilot/egress-ai=allowed (the ai-service) may reach the internet, and only on 443.
+# NetworkPolicy cannot match hostnames: pin the provider's published CIDRs here, or (recommended) use the
+# Cilium FQDN policy in overlays/prod/cilium-egress.yaml so the allowlist is the provider hostname.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: allow-ai-provider-egress, namespace: logpilot }
+spec:
+  podSelector: { matchLabels: { logpilot/egress-ai: allowed } }
+  policyTypes: [Egress]
+  egress:
+    - to: [{ ipBlock: { cidr: 0.0.0.0/0, except: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.169.254/32] } }]
+      ports: [{ port: 443, protocol: TCP }]

@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: logpilot
+  namespace: logpilot
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 520m           # 500MB log uploads
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"  # stream uploads straight through
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"      # WebSocket
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [logpilot.example.com]
+      secretName: logpilot-tls
+  rules:
+    - host: logpilot.example.com
+      http:
+        paths:
+          - { path: /api, pathType: Prefix, backend: { service: { name: api-gateway, port: { number: 8000 } } } }
+          - { path: /ws, pathType: Prefix, backend: { service: { name: api-gateway, port: { number: 8000 } } } }
+          - { path: /, pathType: Prefix, backend: { service: { name: console, port: { number: 80 } } } }

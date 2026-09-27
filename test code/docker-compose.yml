@@ -1,0 +1,96 @@
+# LogPilot AI Agent - infrastructure layer (PRD Section 7.1 / 12.2)
+#
+# This is the original test-code compose file, extended:
+#   db     -> "Managed cloud PostgreSQL + time-series extension"  (unchanged: TimescaleDB)
+#   redis  -> "Message broker + result backend"                    (unchanged)
+#   qdrant -> "Managed vector store"        (added; replaces v1.0's local FAISS index)
+#   object-store -> "Cloud object storage (S3-compatible)" for raw log files (added). SeaweedFS: MinIO no longer
+#                   publishes public container images, and SeaweedFS speaks the same S3 API.
+#
+# Host ports are env-overridable so this can sit next to other Postgres/Redis
+# instances on a developer machine (e.g. POSTGRES_PORT=55432).
+#
+# Standalone:   docker compose -f "test code/docker-compose.yml" up -d
+# Full stack:   the root docker-compose.yml `include`s this file.
+
+services:
+  db:
+    image: timescale/timescaledb:latest-pg15
+    container_name: logpilot_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: logpilot
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: logpilot_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    container_name: logpilot_qdrant
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      # qdrant image has no curl/wget; probe the HTTP port with bash's /dev/tcp
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/6333 && printf \"GET /readyz HTTP/1.0\\r\\n\\r\\n\" >&3 && grep -q 200 <&3'"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  object-store:
+    image: chrislusf/seaweedfs:3.68
+    container_name: logpilot_objectstore
+    command: server -s3 -dir=/data -s3.port=8333
+    ports:
+      - "${S3_PORT:-8333}:8333"
+    volumes:
+      - object_data:/data
+    healthcheck:
+      # master status endpoint (the S3 port has no health route in all versions)
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9333/dir/status"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # creates the log bucket on startup through the S3 API
+  object-store-init:
+    image: amazon/aws-cli:2.17.0
+    container_name: logpilot_objectstore_init
+    depends_on:
+      object-store:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-logpilot}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-logpilot-secret}
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: >
+      /bin/sh -c "
+      until aws --endpoint-url http://object-store:8333 s3api head-bucket --bucket ${S3_BUCKET:-logpilot-logs} >/dev/null 2>&1 ||
+            aws --endpoint-url http://object-store:8333 s3 mb s3://${S3_BUCKET:-logpilot-logs} >/dev/null 2>&1;
+      do echo waiting for the S3 gateway; sleep 2; done && echo bucket ready
+      "
+    restart: "no"
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  object_data:

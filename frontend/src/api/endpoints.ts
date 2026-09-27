@@ -1,0 +1,102 @@
+import { del, get, patch, post, put } from "@/api/client";
+import type {
+  Action, Alert, Anomaly, ApiKeyRow, Approvals, Cluster, Comparison, CreatedApiKey, DeploymentVersion, FeedItem, GlossaryTerm, HealthState, LogSession,
+  ManagedUser, MetricRow, MonitoredService, PolicyResponse, Report, RiskDetail, RiskPoint, RiskRow, SearchResponse, User,
+} from "@/types";
+
+const p = (id: string) => `/projects/${id}`;
+
+export const api = {
+  auth: {
+    login: (email: string, password: string) => post<{ access_token: string; user: User }>("/auth/login", { email, password }),
+    me: () => get<User>("/auth/me"),
+    setGuided: (enabled: boolean) => patch<{ guided_mode: boolean }>("/auth/me/guided-mode", { enabled }),
+  },
+  feed: (id: string, params?: { before?: string; limit?: number }) => get<{ items: FeedItem[]; next_before: string | null }>(`${p(id)}/feed`, params),
+  risk: {
+    board: (id: string) => get<{ services: RiskRow[]; as_of: string }>(`${p(id)}/risk`),
+    detail: (id: string, sid: string) => get<RiskDetail>(`${p(id)}/risk/${sid}`),
+    history: (id: string, sid: string, hours = 6) => get<{ points: RiskPoint[] }>(`${p(id)}/risk/${sid}/history`, { hours }),
+    run: (id: string, sid: string) => post(`${p(id)}/risk/${sid}/run`),
+  },
+  health: (id: string, params: { window_minutes?: number; service?: string }) => get<HealthState>(`${p(id)}/health-state`, params),
+  clusters: (id: string) => get<Cluster[]>(`${p(id)}/clusters`),
+  anomalies: (id: string, hours = 24) => get<Anomaly[]>(`${p(id)}/anomalies`, { hours }),
+  services: (id: string) => get<MonitoredService[]>(`${p(id)}/services`),
+  configureService: (id: string, sid: string, body: Partial<MonitoredService> & { clear_thresholds?: boolean; playbook?: string[] }) => patch(`${p(id)}/services/${sid}`, body),
+  sessions: (id: string) => get<LogSession[]>(`${p(id)}/logs/sessions`),
+  session: (id: string, sid: string) => get<LogSession>(`${p(id)}/logs/sessions/${sid}`),
+  search: (id: string, body: Record<string, unknown>) => post<SearchResponse>(`${p(id)}/search`, body),
+  alerts: {
+    list: (id: string, status = "open") => get<Alert[]>(`${p(id)}/alerts`, { status }),
+    detail: (id: string, aid: string) => get<Alert>(`${p(id)}/alerts/${aid}`),
+    approvals: (id: string) => get<Approvals>(`${p(id)}/approvals`),
+    acknowledge: (id: string, aid: string) => post(`${p(id)}/alerts/${aid}/acknowledge`),
+    dismiss: (id: string, aid: string, reason: string) => post(`${p(id)}/alerts/${aid}/dismiss`, { reason }),
+    release: (id: string, aid: string) => post(`${p(id)}/alerts/${aid}/approve`),
+    outcome: (id: string, aid: string, body: { outcome: string; action_taken?: string; time_to_resolve_minutes?: number; notes?: string }) => post(`${p(id)}/alerts/${aid}/outcome`, body),
+    preMortem: (id: string, aid: string) => post<{ report_id: string }>(`${p(id)}/alerts/${aid}/pre-mortem`),
+    approveAction: (id: string, aid: string) => post<Action & { note: string }>(`${p(id)}/actions/${aid}/approve`),
+    editAction: (id: string, aid: string, text: string) => post<Action>(`${p(id)}/actions/${aid}/edit`, { text, approve: true }),
+    dismissAction: (id: string, aid: string, reason: string) => post<Action>(`${p(id)}/actions/${aid}/dismiss`, { reason }),
+  },
+  chat: {
+    send: (id: string, message: string, thread_id?: string | null) => post<any>(`${p(id)}/chat`, { message, thread_id: thread_id ?? undefined }),
+    thread: (id: string, tid: string) => get<{ id: string; title: string; messages: any[] }>(`${p(id)}/chat/threads/${tid}`),
+    threads: (id: string) => get<{ id: string; title: string; updated_at: string }[]>(`${p(id)}/chat/threads`),
+    rate: (id: string, mid: string, rating: 1 | -1) => post(`${p(id)}/chat/messages/${mid}/rating`, { rating }),
+    suggestions: (id: string) => get<{ prompts: string[] }>(`${p(id)}/chat/suggestions`),
+    explain: (id: string, message: string, service?: string) => post<{ meaning: string; is_normal: boolean; normality_note: string; why_it_matters: string; what_to_check: string[]; occurrences?: number }>(`${p(id)}/chat/explain`, { message, service }),
+  },
+  reports: {
+    list: (id: string, params?: { kind?: string }) => get<Report[]>(`${p(id)}/reports`, params),
+    get: (id: string, rid: string) => get<Report>(`${p(id)}/reports/${rid}`),
+    edit: (id: string, rid: string, body: { title?: string; sections?: { key: string; title: string; body: string }[] }) => patch<Report>(`${p(id)}/reports/${rid}`, body),
+    approve: (id: string, rid: string) => post<Report>(`${p(id)}/reports/${rid}/approve`),
+    discard: (id: string, rid: string) => del(`${p(id)}/reports/${rid}`),
+    incident: (id: string, body: { service?: string; alert_id?: string }) => post<{ report_id: string }>(`${p(id)}/reports/incident`, body),
+    executive: (id: string, days: number) => post<{ report_id: string }>(`${p(id)}/reports/executive-summary`, { days }),
+  },
+  deployments: {
+    versions: (id: string) => get<DeploymentVersion[]>(`${p(id)}/deployments`),
+    compare: (id: string, params: { service: string; from_version: string; to_version: string }) => get<Comparison>(`${p(id)}/deployments/compare`, params),
+    auto: (id: string) => get<{ id: string; service: string; from_version: string; to_version: string; regression: boolean; trigger: string; created_at: string; result: Comparison & { narrative?: string } }[]>(`${p(id)}/deployments/comparisons`),
+  },
+  policy: {
+    tools: () => get<PolicyResponse>("/policy/tools"),
+    set: (tool: string, body: { scope: string; tier: string; min_confidence: number; requires_approval: boolean; enabled: boolean }) => put(`/policy/tools/${tool}`, body),
+    removeOverride: (tool: string, scope: string) => del(`/policy/tools/${tool}`, { scope }),
+    forecast: () => get<{ warning_threshold: number; critical_threshold: number; interval_seconds: number; window_seconds: number }>("/settings/forecasting"),
+    setForecast: (b: { warning_threshold: number; critical_threshold: number; interval_seconds: number; window_seconds: number }) => put("/settings/forecasting", b),
+    provider: () => get<any>("/settings/provider"),
+  },
+  webhooks: {
+    list: () => get<any[]>("/webhooks"),
+    create: (b: { name: string; url: string; secret?: string; events: string[]; min_level: string }) => post("/webhooks", b),
+    remove: (id: string) => del(`/webhooks/${id}`),
+    test: (id: string) => post<{ ok: boolean; status_code: number | null; error: string | null }>(`/webhooks/${id}/test`),
+    deliveries: () => get<any[]>("/webhooks/deliveries"),
+  },
+  users: {
+    list: () => get<ManagedUser[]>("/users"),
+    create: (b: { email: string; name: string; role: string; password: string; project_ids: string[] }) => post<ManagedUser>("/users", b),
+    update: (id: string, b: Partial<{ role: string; is_active: boolean; guided_mode: boolean; project_ids: string[]; name: string }>) => patch<ManagedUser>(`/users/${id}`, b),
+    promote: (id: string) => post<ManagedUser>(`/users/${id}/promote`),
+  },
+  apiKeys: {
+    list: (id: string) => get<ApiKeyRow[]>(`${p(id)}/api-keys`),
+    scopes: (id: string) => get<{ scopes: string[] }>(`${p(id)}/api-keys/scopes`),
+    create: (id: string, b: { name: string; scopes: string[] }) => post<CreatedApiKey>(`${p(id)}/api-keys`, b),
+    revoke: (id: string, keyId: string) => post<ApiKeyRow>(`${p(id)}/api-keys/${keyId}/revoke`),
+  },
+  projects: () => get<{ id: string; name: string; environment: string }[]>("/projects"),
+  glossary: (q?: string) => get<GlossaryTerm[]>("/glossary", { q }),
+  audit: {
+    events: (params: Record<string, unknown>) => get<any[]>("/audit/events", params),
+    actions: (params: Record<string, unknown>) => get<any[]>("/audit/agent-actions", params),
+    verify: () => get<{ valid: boolean; checked: number; first_break_id?: number }>("/audit/verify"),
+    revert: (id: string, note: string) => post(`/audit/agent-actions/${id}/revert`, { note }),
+  },
+  metrics: (id: string) => get<{ user_facing: MetricRow[]; technical: MetricRow[]; cloud_cost: MetricRow[]; window_days: number }>(`${p(id)}/metrics`),
+  system: () => get<{ status: string; components: Record<string, { status: string }> }>("/system/health"),
+};

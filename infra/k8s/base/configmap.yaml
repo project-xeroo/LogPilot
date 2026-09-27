@@ -1,0 +1,33 @@
+# Non-secret settings read by every service (same variable names as .env.example).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logpilot-config
+  namespace: logpilot
+data:
+  ENVIRONMENT: prod
+  LOG_LEVEL: INFO
+  SEED_DEMO: "false"
+  CORS_ORIGINS: https://logpilot.example.com
+  # managed cloud services (endpoints come from Terraform outputs)
+  REDIS_URL: rediss://REPLACE-elasticache-primary-endpoint:6379/0
+  CELERY_BROKER_URL: rediss://REPLACE-elasticache-primary-endpoint:6379/1
+  CELERY_RESULT_BACKEND: rediss://REPLACE-elasticache-primary-endpoint:6379/2
+  S3_ENDPOINT_URL: ""            # empty = real AWS S3 via IRSA
+  S3_BUCKET: logpilot-logs-REPLACE
+  S3_REGION: us-east-1
+  QDRANT_URL: http://qdrant.logpilot-vector.svc:6333
+  EMBEDDING_DIM: "1024"           # must match the embedding model
+  # cloud AI provider: OpenAI-compatible endpoint (also the interface for IBM Bob)
+  AI_PROVIDER: openai_compatible
+  AI_BASE_URL: https://REPLACE-ai-provider-host/v1
+  AI_FAST_MODEL: REPLACE-fast-model
+  AI_DEEP_MODEL: REPLACE-deep-model
+  AI_EMBEDDING_MODEL: REPLACE-embedding-model
+  AI_EGRESS_ALLOWLIST: REPLACE-ai-provider-host
+  AI_SERVICE_URL: http://ai-service:8002
+  INGESTION_SERVICE_URL: http://log-ingestion-service:8001
+  FORECASTING_SERVICE_URL: http://forecasting-service:8003
+  NOTIFICATION_SERVICE_URL: http://notification-service:8004
+  AUDIT_SERVICE_URL: http://audit-service:8005
+  FORECAST_CLOCK: wall

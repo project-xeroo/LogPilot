@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: logpilot
+  labels:
+    app.kubernetes.io/part-of: logpilot
+    pod-security.kubernetes.io/enforce: baseline
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: logpilot
+  namespace: logpilot
+  annotations:
+    # IRSA: least-privilege IAM role for object storage + KMS (created by infra/terraform/modules/storage)
+    eks.amazonaws.com/role-arn: arn:aws:iam::000000000000:role/logpilot-workload

@@ -1,0 +1,35 @@
+# Development conveniences. Loaded automatically by `docker compose up`; skipped when you pass
+# `-f docker-compose.yml` explicitly (production-like runs).
+
+services:
+  api-gateway:
+    environment:
+      PYTHONPATH: /app
+      SEED_DEMO: "true"
+      WEBHOOK_ALLOW_PRIVATE: "true"   # let dev webhooks target localhost tools
+    volumes:
+      - ./shared:/app/shared:ro
+      - ./services/api-gateway/app:/app/app:ro
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app"]
+
+  log-ingestion-service:
+    environment: { PYTHONPATH: /app }
+    volumes: ["./shared:/app/shared:ro", "./services/log-ingestion-service/app:/app/app:ro"]
+    ports: ["8001:8001"]
+
+  ai-service:
+    environment: { PYTHONPATH: /app }
+    volumes: ["./shared:/app/shared:ro", "./services/ai-service/app:/app/app:ro"]
+    ports: ["8002:8002"]
+
+  forecasting-service:
+    environment: { PYTHONPATH: /app }
+    volumes: ["./shared:/app/shared:ro", "./services/forecasting-service/app:/app/app:ro"]
+    ports: ["8003:8003"]
+
+  notification-service:
+    environment: { WEBHOOK_ALLOW_PRIVATE: "true" }
+    ports: ["8004:8004"]
+
+  audit-service:
+    ports: ["8005:8005"]
