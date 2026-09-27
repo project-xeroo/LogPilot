@@ -12,6 +12,20 @@ export default function HomePage() {
   const [tab, setTab] = useState<"chat" | "feed">("chat");
   return (
     <div>
+      <div role="note" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-control bg-teal-soft px-4 py-3 text-teal-ink">
+        <p className="text-sm">
+          Logs on this page are pulled live from a real demo storefront — browse it, add to cart or check out and
+          watch the agent notice it here within seconds.
+        </p>
+        <a
+          href="https://testapp.fawwazkhan.dev"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-control bg-teal px-4 py-2 text-sm font-medium text-paper transition-colors hover:bg-teal/90"
+        >
+          Open the live demo storefront →
+        </a>
+      </div>
       <div role="tablist" aria-label="Home view" className="mb-4 flex gap-1 rounded-control bg-ink/[.06] p-1 lg:hidden">
         {(["chat", "feed"] as const).map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={cn("flex-1 rounded-[5px] px-3 py-1.5 text-sm font-medium", tab === t ? "bg-raised shadow-sm" : "text-muted")}>
