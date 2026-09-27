@@ -18,6 +18,10 @@ x-app-env: &app-env
   ENVIRONMENT: ${ENVIRONMENT:-dev}
   LOG_LEVEL: ${LOG_LEVEL:-INFO}
   SEED_DEMO: ${SEED_DEMO:-true}
+  SEED_DEMO_PASSWORD: ${SEED_DEMO_PASSWORD:-logpilot-demo}
+  BOOTSTRAP_ORG: ${BOOTSTRAP_ORG:-Acme Reliability}
+  BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+  BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
   CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://localhost:5173}
   # managed PostgreSQL + time-series extension
   DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/logpilot
