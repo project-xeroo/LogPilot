@@ -17,6 +17,15 @@ it makes is recorded and needs a human sign-off before anyone acts on it.
   - [Watch deployments, not just services](#watch-deployments-not-just-services)
   - [Built for how real teams actually work](#built-for-how-real-teams-actually-work)
 - [Getting started](#getting-started)
+  - [What you need first](#what-you-need-first)
+  - [1. Configure](#1-configure)
+  - [2. Start everything](#2-start-everything)
+  - [3. Open it](#3-open-it)
+  - [4. A port is already taken](#4-a-port-is-already-taken)
+  - [5. Run the tests](#5-run-the-tests)
+  - [6. Point it at a real hosted model](#6-point-it-at-a-real-hosted-model)
+  - [7. Work on one part without the full stack](#7-work-on-one-part-without-the-full-stack)
+  - [Stopping it](#stopping-it)
 - [Honest boundaries](#honest-boundaries)
 
 ## Built with IBM BOB
@@ -104,14 +113,73 @@ up as a bad deploy — not as an unexplained spike that someone has to manually 
 
 ## Getting started
 
+### What you need first
+
+A machine that can run containers, with Compose support — that's the only real requirement. The default setup
+needs no external accounts, keys, or network access; it runs fully self-contained out of the box.
+
+### 1. Configure
+
 ```bash
 cp .env.example .env
+```
+
+The defaults work as-is for trying it out. Every value in `.env.example` — including the demo account
+passwords — is a placeholder; change them before running this anywhere other than your own machine.
+
+### 2. Start everything
+
+```bash
 make up
 ```
 
-Open the console and sign in with one of the built-in demo accounts (credentials are in `.env.example`). Feed
-it your own logs through the upload screen or its ingestion API, and watch it parse, redact, cluster, and start
-scoring risk in real time. Ask it about anything it flags.
+The first run builds every part of the system from scratch, which takes a few minutes; later runs are fast.
+This one command also brings up the infrastructure the application depends on (database, cache, vector search,
+object storage) — it's pulled in from a nested setup folder included in this repo, so leave that folder where
+it is.
+
+### 3. Open it
+
+- Console (the app itself): **http://localhost:8080**
+- API, with interactive docs: **http://localhost:8000/docs**
+
+Sign in with one of the built-in demo accounts (email/password are in `.env.example`) — they cover every role,
+from an admin down to a read-only viewer. Upload logs from the console, or send them straight to the ingestion
+API, and the agent starts working immediately: parsing, redacting, clustering, and scoring risk in real time.
+Ask it about anything it flags.
+
+### 4. A port is already taken
+
+Every port this stack exposes has a matching `*_PORT` override — open `.env.example` to see them all, set the
+ones you need in `.env`, and re-run `make up`.
+
+### 5. Run the tests
+
+```bash
+make test      # backend + frontend unit tests
+make e2e        # end-to-end checks against the running stack (needs `make up` first)
+```
+
+### 6. Point it at a real hosted model
+
+By default, every piece of intelligence in the system runs on a deterministic offline mode — no key, no outside
+network call, fully reproducible, good enough to see the whole product work end to end. To use a real hosted
+model instead, set the `AI_*` variables in `.env` (endpoint, key, and the model names for its three roles) and
+restart. Every prompt and embedding sent out is scrubbed of sensitive data first, and outbound calls are
+restricted to an explicit allow-list you control.
+
+### 7. Work on one part without the full stack
+
+Start just the infrastructure on its own, then run any single part of the system directly against it for a
+fast local loop instead of rebuilding containers on every change. The console has its own hot-reload mode via
+`make console-dev`.
+
+### Stopping it
+
+```bash
+make down       # stop everything, keep your data
+make clean      # stop everything and wipe data + build output
+```
 
 ## Honest boundaries
 
