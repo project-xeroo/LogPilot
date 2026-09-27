@@ -8,14 +8,16 @@ venv/
 # node
 node_modules/
 frontend/dist/
+*.tsbuildinfo
 # env / secrets
 .env
 .env.local
 *.pem
 # data & artefacts
-data/sample-logs/
+data/
 celerybeat-schedule*
 *.log
+sample.log.txt
 # terraform
 **/.terraform/
 *.tfstate

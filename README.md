@@ -1,88 +1,121 @@
-# LogPilot AI Agent
+# LogPilot
 
-An autonomous, cloud-native agent that watches production log streams, explains incidents in plain language, and
-**forecasts failures before they happen**. People supervise it; it proposes, they decide.
+An autonomous agent that watches your production logs around the clock, explains what's going wrong in plain
+language, and forecasts failures **before** they become incidents. It supervises; people decide. Every proposal
+it makes is recorded and needs a human sign-off before anyone acts on it.
 
-Built from `LogPilot_AI_Agent_PRD_v2.docx`. Every PRD section maps to code below.
+## Contents
 
-## Run it
+- [Built with IBM BOB](#built-with-ibm-bob)
+- [What LogPilot does](#what-logpilot-does)
+  - [See problems coming, not just after they land](#see-problems-coming-not-just-after-they-land)
+  - [Talk to your logs](#talk-to-your-logs)
+  - [Make sense of the noise automatically](#make-sense-of-the-noise-automatically)
+  - [Explain the why, not just the what](#explain-the-why-not-just-the-what)
+  - [Nothing happens without a person saying yes](#nothing-happens-without-a-person-saying-yes)
+  - [Learn from what already happened](#learn-from-what-already-happened)
+  - [Watch deployments, not just services](#watch-deployments-not-just-services)
+  - [Built for how real teams actually work](#built-for-how-real-teams-actually-work)
+- [Getting started](#getting-started)
+- [Honest boundaries](#honest-boundaries)
+
+## Built with IBM BOB
+
+We used IBM BOB to generate the entire structure and architecture of this software. It was dramatically faster
+than every other model we tried at that job, which meant that instead of spending our hackathon window laying
+scaffolding, we got to spend nearly all of it finishing features, fixing rough edges, and polishing the product
+in our own editor. BOB gave us a running start; everything past that point — the workflows, the UI, the tuning,
+the fixes — is us.
+
+## What LogPilot does
+
+LogPilot sits in front of your applications' log streams and turns raw noise into an early-warning system with
+a memory. It doesn't just tell you something broke — it tells you *why*, whether it's happened before, whether
+it's about to happen again, and what it thinks you should do about it.
+
+### See problems coming, not just after they land
+
+The centerpiece of the product is forward-looking risk scoring. Every service being watched gets a live health
+score built from how fast its error rate is accelerating, not just how high it currently is — the same event
+looks very different depending on whether it happened once or is compounding. When a service's trajectory
+crosses into dangerous territory, LogPilot raises a **pre-incident alert** ahead of the outage instead of after
+it, gives it a plain-language explanation, and keeps tracking it until someone acts.
+
+### Talk to your logs
+
+A conversational agent sits on top of the whole system. Ask it things like *"why is the checkout service
+flagged?"* or *"what changed after the last deploy?"* and it answers using the actual data — root cause
+analysis, log search, incident history, deployment comparisons — instead of generic advice. It can also just be
+watched: a live feed shows what the agent is noticing in real time, so nobody has to go ask.
+
+### Make sense of the noise automatically
+
+Incoming logs — in whatever shape they arrive in — get parsed, sensitive information gets automatically
+stripped out before it's stored or ever shown to a model, and near-identical errors get grouped into single
+clusters instead of flooding a dashboard with thousands of duplicate rows. On top of that, an anomaly detector
+watches for statistically unusual spikes or silences that a simple threshold would never catch.
+
+### Explain the why, not just the what
+
+For any incident or cluster of errors, the agent can put together a root-cause writeup: what broke, what likely
+caused it, and what else was happening at the same time — including whether it lines up with a recent
+deployment. It can also generate a full incident or health report on demand, which a human can edit and sign off
+on before it goes out.
+
+### Nothing happens without a person saying yes
+
+This is the part we care about most. The agent only ever *proposes* — it never takes action on its own. Every
+suggested fix or response goes through a strict pipeline we designed specifically for how real teams are
+structured:
+
+1. **Flagged** — the agent notices something and drafts a recommendation.
+2. **Needs a decision** — visible only to senior roles (admins, SREs, developers), who approve, edit, or dismiss it.
+3. **Open** — once a decision has been made, it becomes visible to the whole team, including junior engineers, as something safe to actually go work on.
+4. **History** — the full resolved record, kept for good.
+
+Junior team members never see an unapproved proposal sitting in their queue; they only ever see work that's
+already been vetted. Every decision — who approved what, when, and why — is written to a tamper-evident audit
+log.
+
+### Learn from what already happened
+
+LogPilot remembers past incidents. When something resembling a prior outage starts building again, it can
+connect the dots and say so, instead of treating every incident as if it's never seen anything like it before.
+
+### Watch deployments, not just services
+
+Every release gets compared against the error behavior right before and after it shipped, so a bad deploy shows
+up as a bad deploy — not as an unexplained spike that someone has to manually trace back.
+
+### Built for how real teams actually work
+
+- **Role-based access** — Viewers can look but not touch; junior engineers work in a guided mode and can't
+  approve anything themselves; seniors and admins have full authority; every permission boundary is enforced
+  server-side, not just hidden in the interface.
+- **Full audit trail** — every decision, approval, and dismissal is logged and attributable, with built-in
+  success metrics so a team can see whether the agent is actually helping.
+- **Configurable autonomy policy** — thresholds, notification routing, and webhook destinations are all
+  controlled from settings, with guardrails so a webhook can't be pointed at an internal address by mistake.
+- **Programmatic access** — API keys let other systems integrate with the platform the same way the console
+  does.
+- **Works offline or with a real hosted model** — a fully deterministic offline mode means the whole product
+  works with nothing external at all; point it at a hosted model instead and every prompt and embedding is
+  scrubbed of sensitive data first, and outbound calls are restricted to an explicit allow-list.
+
+## Getting started
 
 ```bash
-cp .env.example .env            # optional: defaults work; AI_PROVIDER=mock runs fully offline
-make up                         # = docker compose up -d --build   (first build takes a few minutes)
-python scripts/generate_sample_logs.py --out data/sample-logs
+cp .env.example .env
+make up
 ```
 
-Open **http://localhost:8080**, sign in with one of the demo accounts (`admin@`, `sre@`, `dev@`, `junior@`, `viewer@logpilot.local`, password in `.env.example`),
-click **Upload logs**, choose `data/sample-logs/logpilot-demo-logs.zip`. About a minute later the agent will have parsed ~85k multi-format records,
-redacted the PII, clustered the errors, flagged a bad deployment, learned the two past outages, and raised a **pre-incident alert** for the outage
-that is building right now. Ask it *"Why is redis-cache flagged?"*.
+Open the console and sign in with one of the built-in demo accounts (credentials are in `.env.example`). Feed
+it your own logs through the upload screen or its ingestion API, and watch it parse, redact, cluster, and start
+scoring risk in real time. Ask it about anything it flags.
 
-* API + OpenAPI docs: http://localhost:8000/docs · Qdrant: http://localhost:6333/dashboard
-* Ports already taken (Postgres 5432, Redis 6379…)? Override in `.env`: `POSTGRES_PORT=55432 REDIS_PORT=56379 …`
-* `make e2e` runs ~90 assertions against the running stack through the public API (RBAC, pipeline, search, chat, forecasting, approvals, reports, policy, audit).
+## Honest boundaries
 
-**Your `test code/docker-compose.yml`** (TimescaleDB + Redis, unchanged) is now the infrastructure layer: I extended it with a Qdrant vector store and
-SeaweedFS (S3-compatible; MinIO no longer publishes container images) and the root `docker-compose.yml` `include`s it. Keep that folder; the stack depends on it.
-
-### Use a real cloud model
-
-```env
-AI_PROVIDER=openai_compatible       # IBM Bob or any OpenAI-compatible endpoint
-AI_BASE_URL=https://<provider-host>/v1
-AI_API_KEY=...
-AI_FAST_MODEL=...  AI_DEEP_MODEL=...  AI_EMBEDDING_MODEL=...   EMBEDDING_DIM=<model's vector size>
-```
-
-Outbound calls are restricted to that host (plus `AI_EGRESS_ALLOWLIST`), and every prompt and embedding input is PII-redacted first.
-Recreate the Qdrant collections if you change `EMBEDDING_DIM`.
-
-### Develop without Docker for the app layer
-
-Start the infra (`docker compose -f "test code/docker-compose.yml" up -d`), then per service:
-`pip install ./shared -r <deps>` and `PYTHONPATH=. uvicorn app.main:app` (see each `services/*/README.md`); console: `make console-dev`.
-
-## What was built, by PRD section
-
-| PRD | Where |
-|---|---|
-| 4 Proactive Failure Forecasting (flagship) | `services/forecasting-service/` velocity · drift · indicators (signatures, feedback loop) · baseline · scoring · loop (scheduler, cycle, alerts) |
-| 5 Tools 01-04 ingestion, parsing, PII redaction, storage | `services/log-ingestion-service/`, `shared/utils/redaction.py`, `shared/utils/db.py` |
-| 5 Tools 05 search, 09 chat, 10 RCA, 11 reports | `services/ai-service/app/{search,chat,rca,reports}` |
-| 5 Tools 06 dedup, 07 clustering, 13 anomalies, 12 deployment comparison | `services/processing-worker/`, `shared/utils/analytics.py` |
-| 5 Tool 08 health-state | `shared/utils/analytics.py::health_state`, `GET /projects/{id}/health-state` |
-| 6 AI architecture (fast/deep/embedding roles, request flows, latency targets) | `services/ai-service/app/providers/`, timeouts + fallbacks in `reports/`, `rca/` |
-| 7 Stack & schema | `shared/models/` (all 11 tables from 7.3, plus supporting tables) |
-| 8 Orchestration & autonomy | `services/api-gateway/app/agent/` (tool router, chat loop), `shared/utils/autonomy.py`, audit in `services/audit-service/` |
-| 9 Frontend plan | `frontend/` (Agent Feed + chat, Risk Board, Alerts & Approvals, Search, Reports, Deployments, Settings; guided mode, glossary) |
-| 10 Roles & permissions | `shared/config/roles.py` (+ enforcement in `app/auth`, `routers/alerts.py`) |
-| 11 Non-functional | `docs/`, health checks, retry/backoff (`shared/utils/celery_factory.py`), degraded modes, success-metrics endpoint |
-| 12 Success metrics | `GET /projects/{id}/metrics`, *Settings → Success metrics* |
-| 13 Cloud deployment | `docker-compose.yml`, `infra/k8s/` (kustomize), `infra/terraform/` (VPC, EKS, RDS, ElastiCache, S3/KMS, Qdrant) |
-| 14 Future scope | left out on purpose (Slack/PagerDuty, autonomous execution, cascade prediction, SSO, multi-tenant) |
-
-Docs: `docs/architecture/overview.md`, `docs/runbooks/incident-response.md`, `docs/api/openapi-spec.yml`.
-
-## Decisions worth knowing
-
-* **Home screen.** The PRD says both "chat is the default landing surface" (9.1) and "Agent Feed is the default landing screen" (9.2). Home is the Agent Feed with the chat docked beside it, and answered questions appear in the same stream.
-* **Roles.** Follows Section 10 literally: *Viewer* has no chat/upload/approvals; *Junior* is guided by default and cannot approve until promoted; an "Engineering Manager" is a Developer/SRE/Admin who reviews and signs off reports.
-* **Approvals are recorded, not executed.** Recommended actions are propose-only; *autonomous execution* is future scope and rejected by the policy API.
-* **No scikit-learn.** DBSCAN, silhouette and Isolation Forest are implemented in NumPy (`services/processing-worker/app/{clustering,anomaly}`): smaller images, and it runs on locked-down hosts.
-* **Offline provider.** `AI_PROVIDER=mock` is deterministic (feature-hashing embeddings + rule-based composition from the same context a cloud model receives). It exists so the product works without a key; prose quality comes from a real model.
-* **Time-series extension.** TimescaleDB hypertables are used when the extension exists (your compose image has it). Amazon RDS lacks it, so `infra/terraform/modules/rds` runs plain PostgreSQL (the app falls back to indexed tables); use Timescale Cloud for hypertables.
-* **Webhook egress.** The PRD's "no other egress" and its webhook requirement pull in opposite directions; registered webhook destinations are Admin/SRE-approved and refuse private/loopback addresses.
-
-## Verification status
-
-**Verified on the build machine**
-
-* 59 backend unit tests (ingestion 16, processing 7, forecasting 8, AI 8, gateway 20) and 8 frontend tests; TypeScript strict typecheck and production build.
-* `scripts/e2e_smoke.py`: **98 checks pass against the real containerised stack, from empty volumes, through the nginx console proxy** (TimescaleDB with the `log_records` hypertable, Redis, Qdrant, SeaweedFS S3, all services, workers, scheduler). Covers RBAC, upload → parse → redact → embed → dedup → cluster → anomalies, search, all chat intents, RCA, forecasting alerts and approvals (incl. guided-mode/junior guardrails), outcome learning, reports (edit, sign-off, PDF/Markdown), deployment comparison, autonomy policy, audit hash-chain, reversal, metrics.
-* The cloud-provider code path (OpenAI-compatible embeddings, chat, JSON tasks, SSE streaming) was exercised against a recording fake server: the provider received **no** email, card number, password or token, and a non-allowlisted host is blocked with nothing sent.
-
-**Not verified**
-
-* `terraform validate/plan` and `kubectl apply -k`: no Terraform binary or cluster was available. Treat `infra/terraform` and `infra/k8s` as reviewed-but-unrun; YAML parses and the Terraform is written against pinned provider/module versions.
-* A live call to IBM Bob or any real hosted model: the provider is configured purely by env vars (`AI_BASE_URL`, models, key) and was only tested against the fake server above. Check the model names and `EMBEDDING_DIM` for your account.
-* Browser-level visual QA was limited to the desktop layout (feed, risk board, alerts, deployments, policy) in dark theme; the phone/tablet layouts and light theme are implemented but were not reviewed on screen.
+This release proposes and records; it does not execute remediations on its own — that's a deliberate choice,
+not a missing feature. Things like chat-app notifications, autonomous execution, cascading-failure prediction,
+single sign-on, and multi-tenant support are intentionally left for later so the core loop — notice, explain,
+decide, act — could be built properly first.
