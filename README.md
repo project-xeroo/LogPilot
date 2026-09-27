@@ -143,10 +143,22 @@ it is.
 - Console (the app itself): **http://localhost:8080**
 - API, with interactive docs: **http://localhost:8000/docs**
 
-Sign in with one of the built-in demo accounts (email/password are in `.env.example`) — they cover every role,
-from an admin down to a read-only viewer. Upload logs from the console, or send them straight to the ingestion
-API, and the agent starts working immediately: parsing, redacting, clustering, and scoring risk in real time.
-Ask it about anything it flags.
+Sign in with one of the built-in demo accounts — they cover every role, from an admin down to a read-only
+viewer, all sharing the same password unless you changed `SEED_DEMO_PASSWORD` in `.env` before the first start:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@logpilot.local` | `logpilot-demo` |
+| SRE | `sre@logpilot.local` | `logpilot-demo` |
+| Developer | `dev@logpilot.local` | `logpilot-demo` |
+| Junior Engineer | `junior@logpilot.local` | `logpilot-demo` |
+| Viewer | `viewer@logpilot.local` | `logpilot-demo` |
+
+These are dev/demo credentials only, seeded automatically on first start — change `SEED_DEMO_PASSWORD` (or set
+`SEED_DEMO=false`) before running this anywhere other than your own machine.
+
+Upload logs from the console, or send them straight to the ingestion API, and the agent starts working
+immediately: parsing, redacting, clustering, and scoring risk in real time. Ask it about anything it flags.
 
 ### 4. A port is already taken
 
